@@ -1,0 +1,43 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #000;
+}
+
+canvas {
+    display: block;
+    opacity: 0;
+    transition: opacity 3.0s ease-in-out;
+}
+
+#caption {
+    position: absolute;
+    top: calc(100% - 120px);
+    left: 30px;
+    width: auto;
+    max-width: 400px;
+    text-align: left;
+    font-family: 'NanumGothicCoding', monospace;
+    font-size: 0.7rem;
+    line-height: 1.6;
+    color: white;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    white-space: normal;
+}
+
+#loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-family: 'NanumGothicCoding', monospace;
+    font-size: 0.7rem;
+    opacity: 1;
+    transition: opacity 0.5s;
+    pointer-events: none;
+}
