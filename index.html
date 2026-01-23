@@ -30,7 +30,7 @@
             font-size: 0.85rem;
         }
 
-        /* 왼쪽 플로팅 사이드바 */
+        /* 1. 사이드바 설정 (PC) */
         .sidebar {
             position: fixed;
             left: 60px;
@@ -40,12 +40,12 @@
             font-family: 'nanumgothiccoding', monospace;
             font-size: 0.85rem;
             color: #000000;
-            pointer-events: none;
             text-transform: lowercase;
+            pointer-events: none;
         }
 
         .sidebar-content {
-            pointer-events: auto;
+            pointer-events: none;
             opacity: 0;
             animation: fadeIn 2s forwards;
         }
@@ -60,31 +60,24 @@
             }
         }
 
-        /* [핵심] 일관된 행간 시스템 */
         .sidebar p {
             margin: 0;
-            /* 모든 마진 제거 */
             line-height: 1.75;
-            /* 행간 통일 */
+            pointer-events: none;
         }
 
-        /* 빈 줄에 대한 일관성 확보 */
         .sidebar p:empty::before {
             content: '\00a0';
         }
 
         .link-style,
         a {
+            pointer-events: auto !important;
             color: #0000ff;
             text-decoration: underline;
             cursor: pointer;
         }
 
-        a {
-            color: #0000ff;
-        }
-
-        /* 소개창 트랜지션 (간격 영향 최소화) */
         .intro {
             overflow: hidden;
             max-height: 0;
@@ -97,7 +90,7 @@
             opacity: 1;
         }
 
-        /* 전체 화면 투명 유리 모달 */
+        /* 2. 모달 설정 (PC) */
         .modal {
             position: fixed;
             top: 0;
@@ -105,10 +98,8 @@
             width: 100vw;
             height: 100vh;
             background: rgba(255, 255, 255, 0.5);
-            /* 투명도 0.5 */
             backdrop-filter: blur(9px);
             -webkit-backdrop-filter: blur(9px);
-            /* 블러 9px */
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.6s ease;
@@ -154,25 +145,48 @@
             text-transform: lowercase;
         }
 
+        /* [수정] 블루 클래스: 볼드 제거 */
         .blue {
             color: #0000ff !important;
-            font-weight: bold;
+            font-weight: normal;
         }
 
+        /* 3. 반응형 (모바일) 동기화 */
         @media (max-width: 600px) {
+
+            /* 사이드바와 모달의 상단 시작 위치를 60px로 통일 */
             .sidebar {
                 left: 20px;
-                top: 40px;
+                top: 60px;
                 width: 85%;
             }
 
             .modal {
-                padding: 100px 20px;
+                padding: 60px 20px;
+            }
+
+            /* 닫기 버튼을 텍스트 방해하지 않게 20px 위치에 배치 */
+            #modal-close {
+                top: 20px;
+                right: 20px;
             }
 
             .modal-content {
                 grid-template-columns: 1fr;
+                gap: 80px;
             }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .modal::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .modal::-webkit-scrollbar-thumb {
+            background: #000000;
         }
     </style>
 </head>
@@ -214,7 +228,7 @@
     </div>
 
     <div id="profile-modal" class="modal">
-        <button id="modal-close">×</button>
+        <button id="modal-close">⌱</button>
         <div class="modal-content">
             <div class="column"><span class="blue">작가, 디자이너, 연구자 이력
                     painter, designer, researcher cv</span>
@@ -236,7 +250,7 @@
                 〈디자인 매거진 ca #260〉 인터뷰.
 
                 visualsfrom(video production)
-                mv 연출・미술</div>
+                mv 연출・미술.</div>
             <div class="column"><span class="blue">전시경력
                     exhibition</span>
 
