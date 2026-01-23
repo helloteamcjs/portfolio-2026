@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>chungjinsung</title>
     <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-gothic-coding.css" rel="stylesheet">
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <style>
+        /* 기본 설정 */
         body {
             margin: 0;
             padding: 0;
@@ -31,7 +31,7 @@
             font-size: 0.85rem;
         }
 
-        /* 1. 사이드바 설정 (PC) */
+        /* 1. 사이드바 (PC) */
         .sidebar {
             position: fixed;
             left: 60px;
@@ -91,7 +91,7 @@
             opacity: 1;
         }
 
-        /* 2. 모달 설정 (PC) */
+        /* 2. 모달 (PC) - 최적화 적용 */
         .modal {
             position: fixed;
             top: 0;
@@ -112,6 +112,10 @@
             padding: 120px 60px;
             box-sizing: border-box;
             overflow-y: scroll;
+
+            /* [최적화] 하드웨어 가속 및 스크롤 안정화 */
+            -webkit-overflow-scrolling: touch;
+            will-change: opacity;
         }
 
         .modal.active {
@@ -133,6 +137,7 @@
             padding: 0;
         }
 
+        /* 3. 모달 콘텐츠 - 렌더링 누락 방지 */
         .modal-content {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -144,18 +149,19 @@
             color: #000000;
             white-space: pre-line;
             text-transform: lowercase;
+
+            /* [최적화] GPU 레이어 분리 (사라짐 방지) */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
         }
 
-        /* [수정] 블루 클래스: 볼드 제거 */
         .blue {
             color: #0000ff !important;
             font-weight: normal;
         }
 
-        /* 3. 반응형 (모바일) 동기화 */
+        /* 4. 반응형 (모바일) 동기화 */
         @media (max-width: 600px) {
-
-            /* 사이드바와 모달의 상단 시작 위치를 60px로 통일 */
             .sidebar {
                 left: 20px;
                 top: 60px;
@@ -166,7 +172,6 @@
                 padding: 60px 20px;
             }
 
-            /* 닫기 버튼을 텍스트 방해하지 않게 20px 위치에 배치 */
             #modal-close {
                 top: 20px;
                 right: 20px;
@@ -178,6 +183,7 @@
             }
         }
 
+        /* 커스텀 스크롤바 */
         .modal::-webkit-scrollbar {
             width: 4px;
         }
@@ -251,7 +257,7 @@
                 〈디자인 매거진 ca #260〉 인터뷰.
 
                 visualsfrom(video production)
-                mv 연출・미술.</div>
+                mv 연출・미술</div>
             <div class="column"><span class="blue">전시경력
                     exhibition</span>
 
