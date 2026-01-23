@@ -27,8 +27,8 @@ const loadingDiv = document.getElementById('loading');
 
 const ORBIT_GROUPS = [
     { radius: 10, planets: ['paint-ing', 'drawing'], speed: 0.003 },
-    { radius: 18, planets: ['graphic', 'video', 'web'], speed: 0.002 },
-    { radius: 26, planets: ['show', 'con-struct'], speed: 0.001 }
+    { radius: 18, planets: ['graphic', 'video', 'web'], speed: 0.006 },
+    { radius: 26, planets: ['show', 'con-struct'], speed: 0.012 }
 ];
 
 // ---------------------------------------------------------
