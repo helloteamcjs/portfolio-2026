@@ -7,12 +7,22 @@
     <title>chungjinsung</title>
     <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-gothic-coding.css" rel="stylesheet">
     <style>
-        /* 기본 설정 */
+        /* 1. 기본 레이아웃 및 전역 조판 규칙 */
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
             background-color: #ffffff;
+            /* 사이트 전체 단어 단위 줄바꿈 일원화 */
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+
+        p,
+        div,
+        span {
+            word-break: keep-all;
+            overflow-wrap: break-word;
         }
 
         canvas {
@@ -31,7 +41,27 @@
             font-size: 0.85rem;
         }
 
-        /* 1. 사이드바 (PC) */
+        /* 2. 시스템 기반 타이포그래피 */
+        .link-style,
+        a,
+        .top-email,
+        #modal-close {
+            text-decoration: underline !important;
+            text-underline-position: from-font !important;
+            text-decoration-skip-ink: auto !important;
+            -webkit-text-decoration-skip-ink: auto !important;
+            text-decoration-thickness: auto !important;
+            text-underline-offset: auto !important;
+            cursor: pointer;
+        }
+
+        .link-style,
+        a,
+        #modal-close {
+            color: #0000ff !important;
+        }
+
+        /* 3. 사이드바 (기준선: 좌측 60px, 상단 120px) */
         .sidebar {
             position: fixed;
             left: 60px;
@@ -74,9 +104,6 @@
         .link-style,
         a {
             pointer-events: auto !important;
-            color: #0000ff;
-            text-decoration: underline;
-            cursor: pointer;
         }
 
         .intro {
@@ -91,7 +118,7 @@
             opacity: 1;
         }
 
-        /* 2. 모달 (PC) - 최적화 적용 */
+        /* 4. 모달 구조 (헤더 고정형) */
         .modal {
             position: fixed;
             top: 0;
@@ -106,16 +133,7 @@
             transition: opacity 0.6s ease;
             z-index: 1000;
             font-family: 'nanumgothiccoding', monospace;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 120px 60px;
-            box-sizing: border-box;
-            overflow-y: scroll;
-
-            /* [최적화] 하드웨어 가속 및 스크롤 안정화 */
-            -webkit-overflow-scrolling: touch;
-            will-change: opacity;
+            overflow: hidden;
         }
 
         .modal.active {
@@ -123,21 +141,48 @@
             pointer-events: auto;
         }
 
+        .modal-scroll-area {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 모달 상단 고정 요소 (기준선: 좌측 60px, 상단 40px) */
+        .top-email {
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            font-size: 0.85rem;
+            color: #000000 !important;
+            z-index: 1002;
+            text-transform: lowercase;
+            transition: opacity 0.4s ease, color 0.4s ease;
+        }
+
+        .top-email.fade {
+            opacity: 0;
+        }
+
+        .top-email.selected {
+            color: #0000ff !important;
+        }
+
         #modal-close {
-            position: fixed;
+            position: absolute;
             top: 40px;
             right: 40px;
             background: none;
             border: none;
             font-family: 'nanumgothiccoding', monospace;
             font-size: 0.85rem;
-            color: #0000ff;
             cursor: pointer;
-            z-index: 1001;
+            z-index: 1002;
             padding: 0;
+            text-transform: lowercase;
         }
 
-        /* 3. 모달 콘텐츠 - 렌더링 누락 방지 */
+        /* 5. 모달 콘텐츠 그리드 (좌측 정렬 x=60px 유지) */
         .modal-content {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -147,12 +192,19 @@
             font-size: 0.85rem;
             line-height: 1.6;
             color: #000000;
-            white-space: pre-line;
             text-transform: lowercase;
+            padding: 120px 60px;
+            margin: 0;
+            box-sizing: border-box;
+            text-align: left;
+        }
 
-            /* [최적화] GPU 레이어 분리 (사라짐 방지) */
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
+        .column-list {
+            white-space: pre-line;
+        }
+
+        .column-intro {
+            white-space: normal;
         }
 
         .blue {
@@ -160,39 +212,36 @@
             font-weight: normal;
         }
 
-        /* 4. 반응형 (모바일) 동기화 */
+        /* 6. 반응형 대응 */
         @media (max-width: 600px) {
             .sidebar {
                 left: 20px;
-                top: 60px;
+                top: 120px;
                 width: 85%;
             }
 
-            .modal {
-                padding: 60px 20px;
+            .modal-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                padding: 120px 20px 60px 20px;
+            }
+
+            .top-email {
+                top: 20px;
+                left: 20px;
             }
 
             #modal-close {
                 top: 20px;
                 right: 20px;
             }
-
-            .modal-content {
-                grid-template-columns: 1fr;
-                gap: 80px;
-            }
         }
 
-        /* 커스텀 스크롤바 */
-        .modal::-webkit-scrollbar {
+        .modal-scroll-area::-webkit-scrollbar {
             width: 4px;
         }
 
-        .modal::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .modal::-webkit-scrollbar-thumb {
+        .modal-scroll-area::-webkit-scrollbar-thumb {
             background: #000000;
         }
     </style>
@@ -235,56 +284,64 @@
     </div>
 
     <div id="profile-modal" class="modal">
-        <button id="modal-close">⌱</button>
-        <div class="modal-content">
-            <div class="column"><span class="blue">작가, 디자이너, 연구자 이력
-                    painter, designer, researcher cv</span>
+        <span class="top-email" id="email-text">helloteamcjs@gmail.com</span>
+        <button id="modal-close">close</button>
 
-                2024
-                서울과학기술대학교
-                시각디자인학과 석사 재학,
-                (typography lab), 서울.
+        <div class="modal-scroll-area">
+            <div class="modal-content">
+                <div class="column column-list"><span class="blue">작가, 디자이너, 연구자 이력
+                        painter, designer, researcher cv</span>
 
-                2018
-                가천대학교
-                시각디자인과 학사 졸업, 성남.
+                    2024
+                    서울과학기술대학교,
+                    시각디자인학과 석사 재학,
+                    (typography lab), 서울.
 
-                2022
-                벗이미술관
-                창작 레지던시 입주, 용인.
+                    2018
+                    가천대학교,
+                    시각디자인과 학사 졸업, 성남.
 
-                참고자료
-                〈디자인 매거진 ca #260〉 인터뷰.
+                    2022
+                    벗이미술관,
+                    창작 레지던시 입주, 용인.
 
-                visualsfrom(video production)
-                mv 연출・미술</div>
-            <div class="column"><span class="blue">전시경력
-                    exhibition</span>
+                    참고자료
+                    〈디자인 매거진 ca #260〉 인터뷰.
 
-                2025
-                《la trahison des langages》
-                갤러리 아원, 서울.
+                    visualsfrom(video production)
+                    mv 연출・미술.</div>
 
-                2024
-                《ㅎkㄱr》
-                코너 갤러리, 서울.
+                <div class="column column-list"><span class="blue">전시경력
+                        exhibition</span>
 
-                2023
-                《kill time trash: 비디오 아트 상영회》
-                wess, 서울.
-                《독백》
-                벗이미술관, 용인.
+                    2025
+                    《la trahison des langages》
+                    갤러리 아원, 서울.
 
-                2021
-                《concept 2021》
-                시카 미술관, 김포.
-                《cjs mini show at cafe apricot》
-                살구다방, 서울.
+                    2024
+                    《ㅎkㄱr》
+                    코너 갤러리, 서울.
 
-                2019
-                《chungjinsung, cafe apricot》
-                살구다방, 서울.</div>
-            <div class="column"></div>
+                    2023
+                    《kill time trash: 비디오 아트 상영회》
+                    wess, 서울.
+
+                    2021
+                    《concept 2021》
+                    시카 미술관, 김포.
+                    《cjs mini show at cafe apricot》
+                    살구다방, 서울.
+
+                    2019
+                    《chungjinsung, cafe apricot》
+                    살구다방, 서울.</div>
+
+                <div class="column column-intro">작품 활동과 함께, 서울과학기술대학교 시각디자인학과 타이포그래피 연구실에서 “타이포그래피의 의미와 구조”에 관한 연구를 진행하고
+                    있다. 작업을 아우르는 핵심 주제는 “언어”와 “이미지”의 “관계”이다. 시각 예술은 항상 이미지로 존재하지만, 그 이미지는 세상에 보이는 순간부터 언어나 기호처럼 작동하게 된다.
+                    초기 작업에선 이러한 작동 원리에 의구심을 갖고 이미지를 ‘언어와 구별된 순수한 대상’으로 분리하고자 하였으나, 이미지가 인식되는 순간 발생하는 언어의 개입을 완전히 차단하는
+                    것에는 번번이 실패하였다. 역설적이게도, 이러한 실패는 두 대상 사이의 불가분한 관계에 관한 호기심으로 이어졌다. 지금은 시각화된 언어로서의 문자와, 물질화된 문자인 활자 등에
+                    주목하고 있다.</div>
+            </div>
         </div>
     </div>
 
@@ -293,6 +350,33 @@
             const el = document.getElementById(lang === 'kor' ? 'intro-kor' : 'intro-eng');
             el.classList.toggle('active');
         }
+
+        function openProfileModal() { document.getElementById('profile-modal').classList.add('active'); }
+        function closeProfileModal() { document.getElementById('profile-modal').classList.remove('active'); }
+
+        document.getElementById('modal-close').addEventListener('click', closeProfileModal);
+        document.getElementById('profile-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'profile-modal') closeProfileModal();
+        });
+
+        const emailText = document.getElementById('email-text');
+        const officialEmail = "helloteamcjs@gmail.com";
+        emailText.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (this.innerText === 'copied !') return;
+            navigator.clipboard.writeText(officialEmail);
+            this.innerText = 'copied !';
+            this.classList.add('selected');
+            setTimeout(() => {
+                this.classList.add('fade');
+                setTimeout(() => {
+                    this.innerText = officialEmail;
+                    this.classList.remove('selected');
+                    this.classList.remove('fade');
+                }, 400);
+            }, 1500);
+        });
+        window.openProfileModal = openProfileModal;
     </script>
     <script
         type="importmap"> { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } } </script>
