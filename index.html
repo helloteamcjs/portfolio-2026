@@ -201,7 +201,9 @@
             align-items: start;
         }
 
-        .video-content {
+        /* 웹 및 비디오 모달 (1단 세로 구성) */
+        .video-content,
+        .web-content {
             display: flex;
             flex-direction: column;
             gap: 100px;
@@ -249,11 +251,6 @@
             object-fit: cover;
         }
 
-        .video-link {
-            text-decoration: none !important;
-            display: block;
-        }
-
         .blue {
             color: #0000ff !important;
             font-weight: normal;
@@ -271,7 +268,8 @@
             }
 
             .modal-content,
-            .video-content {
+            .video-content,
+            .web-content {
                 grid-template-columns: 1fr;
                 gap: 40px;
                 padding: 120px 20px 60px 20px;
@@ -351,7 +349,7 @@
     </div>
     <div id="web-modal" class="modal"><button class="modal-close" onclick="closeModal('web-modal')">close</button>
         <div class="modal-scroll-area">
-            <div class="modal-content" id="web-render"></div>
+            <div class="web-content" id="web-render"></div>
         </div>
     </div>
     <div id="construct-modal" class="modal"><button class="modal-close"
@@ -376,9 +374,9 @@
             Object.keys(WORKS_DATA).forEach(key => {
                 const container = document.getElementById(`${key}-render`);
                 if (!container) return;
+
                 if (key === 'profile') {
                     const d = WORKS_DATA.profile;
-                    // [수정] 제목부 줄바꿈 적용 및 단락 상단 정렬을 위한 불필요한 공백 제거
                     container.innerHTML = `<div class="column column-list"><span class="blue">작가, 디자이너, 연구자 이력\npainter, designer, researcher cv</span>\n\n${d.cv}</div><div class="column column-list"><span class="blue">전시경력\nexhibition</span>\n\n${d.exhibition}</div><div class="column column-intro">${d.statement}</div>`;
                 } else {
                     WORKS_DATA[key].forEach(item => {
@@ -387,6 +385,13 @@
                             html = item.type === 'auto'
                                 ? `<div class="video-item"><iframe class="auto-video" src="https://www.youtube.com/embed/${item.id}?enablejsapi=1" allowfullscreen></iframe></div>`
                                 : `<div class="video-item"><a href="https://youtu.be/${item.id}" target="_blank" class="video-link"><img src="https://img.youtube.com/vi/${item.id}/maxresdefault.jpg"></a></div>`;
+                        } else if (key === 'web') {
+                            const imgHtml = `<img src="${item.src}" class="work-img">`;
+                            const linkedImg = item.url ? `<a href="${item.url}" target="_blank">${imgHtml}</a>` : imgHtml;
+                            html = `<div class="work-item" style="max-width: 800px;">
+                                        ${linkedImg}
+                                        <p class="work-caption">${item.caption}</p>
+                                    </div>`;
                         } else {
                             html = `<div class="work-item"><img src="${item.src}" class="work-img"><p class="work-caption">${item.caption}</p></div>`;
                         }
@@ -421,11 +426,13 @@
 
         renderSystem();
         const emailBtn = document.getElementById('email-text');
-        emailBtn.onclick = () => {
-            navigator.clipboard.writeText("helloteamcjs@gmail.com");
-            emailBtn.innerText = "copied !"; emailBtn.classList.add('selected');
-            setTimeout(() => { emailBtn.innerText = "helloteamcjs@gmail.com"; emailBtn.classList.remove('selected'); }, 1500);
-        };
+        if (emailBtn) {
+            emailBtn.onclick = () => {
+                navigator.clipboard.writeText("helloteamcjs@gmail.com");
+                emailBtn.innerText = "copied !"; emailBtn.classList.add('selected');
+                setTimeout(() => { emailBtn.innerText = "helloteamcjs@gmail.com"; emailBtn.classList.remove('selected'); }, 1500);
+            };
+        }
     </script>
     <script type="module" src="js/main.js"></script>
 </body>

@@ -1,3 +1,4 @@
+/* [js/main.js] 모바일 터치 즉시 반응 및 유기적 움직임 보존 버전 */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -7,19 +8,18 @@ const COLOR_BLUE = '#0000ff';
 let hoveredObject = null; let clickedObject = null;
 let isDragging = false; let selectedGroupForDrag = null;
 let mouseDownPosition = { x: 0, y: 0 };
-const CLICK_THRESHOLD = 5; // 작가님의 원본 물리값 보존
+const CLICK_THRESHOLD = 5; // 작가님의 원본 감도 보존
 
 const ORBIT_GROUPS = [
-    { radius: 10, planets: ['paint-ing', 'drawing'], speed: 0.003 },
+    { radius: 10, planets: ['painting', 'drawing'], speed: 0.003 },
     { radius: 18, planets: ['graphic', 'video', 'web'], speed: 0.006 },
-    { radius: 26, planets: ['show', 'con-struct'], speed: 0.012 }
+    { radius: 26, planets: ['show', 'construct'], speed: 0.012 }
 ];
 
-// 조판 레이블을 시스템 모달 ID로 매핑
 const MODAL_MAP = {
-    '정진성': 'profile', 'paint-ing': 'painting', 'drawing': 'drawing',
+    '정진성': 'profile', 'painting': 'painting', 'drawing': 'drawing',
     'graphic': 'graphic', 'video': 'video', 'web': 'web',
-    'con-struct': 'construct', 'show': 'show'
+    'construct': 'construct', 'show': 'show'
 };
 
 function createDotTexture() {
@@ -39,20 +39,20 @@ function createPlanetMaterials(name, color = 'black') {
     ctx.fillStyle = color; ctx.font = `bold ${fontSize}px "nanumgothiccoding"`;
     ctx.textBaseline = 'middle';
 
-    const text = name.toLowerCase();
-    if (text.includes('-')) {
-        const parts = text.split('-');
+    let displayName = name === 'profile' ? '정진성' : name.toLowerCase();
+    if (displayName === 'painting') displayName = 'paint-ing';
+    if (displayName === 'construct') displayName = 'con-struct';
+
+    if (displayName.includes('-')) {
+        const parts = displayName.split('-');
         const line1 = parts[0] + '-'; const line2 = parts[1];
-        const w1 = ctx.measureText(line1).width; const w2 = ctx.measureText(line2).width;
-        const maxWidth = Math.max(w1, w2);
+        const maxWidth = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width);
         const startX = (size - maxWidth) / 2;
         ctx.textAlign = 'left';
-        const yOffset = fontSize * 0.55;
-        ctx.fillText(line1, startX, size / 2 - yOffset);
-        ctx.fillText(line2, startX, size / 2 + yOffset);
+        ctx.fillText(line1, startX, size / 2 - fontSize * 0.55);
+        ctx.fillText(line2, startX, size / 2 + fontSize * 0.55);
     } else {
-        ctx.textAlign = 'center';
-        ctx.fillText(text, size / 2, size / 2 + (fontSize * 0.05));
+        ctx.textAlign = 'center'; ctx.fillText(displayName, size / 2, size / 2 + fontSize * 0.05);
     }
     const tex = new THREE.CanvasTexture(canvas); tex.anisotropy = 16;
     return new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: true, alphaTest: 0.5, sizeAttenuation: false });
@@ -65,6 +65,7 @@ renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(
 document.body.appendChild(renderer.domElement);
 
 const clickableObjects = []; const planetsUpdateFns = []; let controls;
+const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
 
 function initSystem() {
     camera.position.z = INITIAL_CAM_Z;
@@ -74,7 +75,7 @@ function initSystem() {
 
     ORBIT_GROUPS.forEach(group => {
         const systemGroup = new THREE.Group();
-        systemGroup.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0); // 유기적 움직임 복구
+        systemGroup.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
         scene.add(systemGroup);
         const curve = new THREE.EllipseCurve(0, 0, group.radius, group.radius);
         const orbitGeo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(group.radius * 10));
@@ -85,50 +86,106 @@ function initSystem() {
             const planet = new THREE.Sprite(matK); planet.scale.set(0.12, 0.12, 1); planet.name = name;
             planet.userData = { matK: matK, matB: matB, parentGroup: systemGroup }; systemGroup.add(planet); clickableObjects.push(planet);
             const angle = (i / group.planets.length) * Math.PI * 2;
-            planetsUpdateFns.push(() => {
-                const now = angle + (Date.now() * 0.001 * group.speed * 10);
-                planet.position.set(Math.cos(now) * group.radius, Math.sin(now) * group.radius, 0);
-            });
+            planetsUpdateFns.push(() => { planet.position.set(Math.cos(angle + Date.now() * 0.001 * group.speed * 10) * group.radius, Math.sin(angle + Date.now() * 0.001 * group.speed * 10) * group.radius, 0); });
         });
     });
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 0.2;
+    controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 0.2;
     setupInteractions();
 }
 
 function setupInteractions() {
-    const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
     window.addEventListener('pointerdown', (e) => {
         if (document.querySelector('canvas').classList.contains('modal-active')) return;
         if (isOpening) { isOpening = false; camera.position.z = FINAL_CAM_Z; }
-        mouseDownPosition = { x: e.clientX, y: e.clientY }; isDragging = false;
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(clickableObjects);
-        if (intersects.length > 0) selectedGroupForDrag = intersects[0].object.userData.parentGroup;
-    });
-    window.addEventListener('pointermove', (e) => {
-        if (document.querySelector('canvas').classList.contains('modal-active')) { document.body.style.cursor = 'default'; return; }
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        const dist = Math.hypot(e.clientX - mouseDownPosition.x, e.clientY - mouseDownPosition.y);
-        if (dist > CLICK_THRESHOLD && selectedGroupForDrag) { isDragging = true; controls.enabled = false; }
-        if (isDragging && selectedGroupForDrag) { selectedGroupForDrag.rotation.y += e.movementX * 0.005; selectedGroupForDrag.rotation.x += e.movementY * 0.005; }
-        else {
-            raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(clickableObjects);
-            if (intersects.length > 0) { document.body.style.cursor = 'pointer'; const obj = intersects[0].object; if (hoveredObject !== obj) { if (hoveredObject && hoveredObject !== clickedObject) hoveredObject.material = hoveredObject.userData.matK; hoveredObject = obj; hoveredObject.material = hoveredObject.userData.matB; } }
-            else { document.body.style.cursor = 'default'; if (hoveredObject && hoveredObject !== clickedObject) hoveredObject.material = hoveredObject.userData.matK; hoveredObject = null; }
+
+        mouseDownPosition = { x: e.clientX, y: e.clientY };
+        isDragging = false;
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(clickableObjects);
+
+        if (intersects.length > 0) {
+            const obj = intersects[0].object;
+            selectedGroupForDrag = obj.userData.parentGroup;
+
+            // [모바일 대응] 터치 즉시 파란색 하이라이트 적용
+            if (hoveredObject && hoveredObject !== obj) hoveredObject.material = hoveredObject.userData.matK;
+            hoveredObject = obj;
+            hoveredObject.material = hoveredObject.userData.matB;
         }
     });
-    window.addEventListener('pointerup', () => {
+
+    window.addEventListener('pointermove', (e) => {
         if (document.querySelector('canvas').classList.contains('modal-active')) return;
-        if (!isDragging) {
-            raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(clickableObjects);
+
+        const dist = Math.hypot(e.clientX - mouseDownPosition.x, e.clientY - mouseDownPosition.y);
+        if (dist > CLICK_THRESHOLD && selectedGroupForDrag) {
+            isDragging = true;
+            controls.enabled = false;
+            // 드래그 중에는 클릭 대상의 색상을 유지하거나 드래그 대상에 집중
+        }
+
+        if (isDragging && selectedGroupForDrag) {
+            selectedGroupForDrag.rotation.y += e.movementX * 0.005;
+            selectedGroupForDrag.rotation.x += e.movementY * 0.005;
+        } else if (!isDragging) {
+            // 호버 감지 (PC 위주)
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(clickableObjects);
+
+            if (intersects.length > 0) {
+                document.body.style.cursor = 'pointer';
+                const obj = intersects[0].object;
+                if (hoveredObject !== obj) {
+                    if (hoveredObject && hoveredObject !== clickedObject) hoveredObject.material = hoveredObject.userData.matK;
+                    hoveredObject = obj;
+                    hoveredObject.material = hoveredObject.userData.matB;
+                }
+            } else {
+                document.body.style.cursor = 'default';
+                if (hoveredObject && hoveredObject !== clickedObject) {
+                    hoveredObject.material = hoveredObject.userData.matK;
+                    hoveredObject = null;
+                }
+            }
+        }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+        if (document.querySelector('canvas').classList.contains('modal-active')) return;
+
+        const finalDist = Math.hypot(e.clientX - mouseDownPosition.x, e.clientY - mouseDownPosition.y);
+
+        if (!isDragging && finalDist < CLICK_THRESHOLD) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(clickableObjects);
+
             if (intersects.length > 0) {
                 const obj = intersects[0].object;
-                const target = MODAL_MAP[obj.name]; // [복구] 정진성 행성 클릭 시 profile 모달 연결
+                const target = MODAL_MAP[obj.name];
                 if (window.openModal && target) window.openModal(target);
+
                 if (clickedObject) clickedObject.material = clickedObject.userData.matK;
-                clickedObject = obj; clickedObject.material = clickedObject.userData.matB; controls.autoRotate = false;
-            } else { if (clickedObject) clickedObject.material = clickedObject.userData.matK; clickedObject = null; controls.autoRotate = true; }
+                clickedObject = obj;
+                clickedObject.material = clickedObject.userData.matB;
+                controls.autoRotate = false;
+            } else {
+                if (clickedObject) clickedObject.material = clickedObject.userData.matK;
+                clickedObject = null;
+                controls.autoRotate = true;
+            }
+        } else {
+            // 드래그 종료 시 하이라이트 해제 (클릭된 상태가 아니라면)
+            if (hoveredObject && hoveredObject !== clickedObject) {
+                hoveredObject.material = hoveredObject.userData.matK;
+                hoveredObject = null;
+            }
         }
         isDragging = false; selectedGroupForDrag = null; controls.enabled = true;
     });
